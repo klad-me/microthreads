@@ -63,16 +63,17 @@ void utStart(void)
 			
 			if (currentThread->code)
 			{
-				// Считаем таймер сна
-				if (currentThread->T > dT) currentThread->T-=dT;
-				
-				// Будим нитку, если таймер кончился
-				if (currentThread->T == 0)
+				// Считаем таймер сна, и будим нитку, если таймер кончился
+				if (currentThread->T > dT)
+					currentThread->T-=dT; else
 					currentThread->state=THREAD_RUNNING;
+				
+				//printf("cp %d state=%d T=%d\n", i, currentThread->state, currentThread->T);
 				
 				// Запускаем код, если нитка в нужном состоянии
 				if (currentThread->state == THREAD_RUNNING)
 				{
+					//printf("run thread %d\n", i);
 					if ( (currentThread->state = currentThread->code( &currentThread->line, currentThread->arg )) == THREAD_FINISHED )
 						threads[i].code=0;
 				}
@@ -95,7 +96,10 @@ void utStart(void)
 				
 				// Будим нитку, если надо
 				if (ut_wake & currentThread->wait)
+				{
 					currentThread->state=THREAD_RUNNING;
+					currentThread->wait&=~ut_wake;
+				}
 				
 				// Обрабатываем состояние нитки
 				switch (currentThread->state)
@@ -113,6 +117,8 @@ void utStart(void)
 					
 					case THREAD_WAITING:
 						// Ждет
+						if (t_sleep < t_wait)
+							t_wait=t_sleep;
 						t_sleep=0;	// запрещаем сон
 						if (currentThread->T < t_wait)
 							t_wait=currentThread->T;
