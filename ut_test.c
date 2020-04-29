@@ -4,7 +4,7 @@
 #include "ut.h"
 
 
-uint16_t utTime(void)
+ut_time_t utTime(void)
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
@@ -15,24 +15,24 @@ uint16_t utTime(void)
     v*=1000;
     v+=ts.tv_nsec/1000000;
 	
-    return (uint16_t)(v & 0xffff);
+    return (ut_time_t)(v & 0xffffffff);
 }
 
 
-sem_t utExtWake(void)
+ut_sem_t utExtWake(void)
 {
 	return 0;
 }
 
 
-void utDoSleep(uint16_t T)
+void utDoSleep(ut_time_t T)
 {
 	printf("utDoSleep(%d)\n", T);
 	usleep(T*1000);
 }
 
 
-void utDoWait(uint16_t T)
+void utDoWait(ut_time_t T)
 {
 	printf("utDoWait(%d)\n", T);
 	usleep(T*1000);

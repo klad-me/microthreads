@@ -1,9 +1,9 @@
 #include "ut.h"
 
 
-static struct thread threads[MAX_THREADS];
-struct thread *currentThread;
-sem_t ut_wake;
+static struct ut_thread threads[UT_MAX_THREADS];
+struct ut_thread *utCurrentThread;
+ut_sem_t ut_wake;
 
 
 void utInit(void)
@@ -11,21 +11,21 @@ void utInit(void)
 	uint8_t i;
 	
 	// Очищаем список ниток
-	for (i=0; i<MAX_THREADS; i++)
+	for (i=0; i<UT_MAX_THREADS; i++)
 		threads[i].code=0;
 }
 
 
-void utThread(thread_t code, void *arg)
+void utThread(ut_thread_t code, void *arg)
 {
 	uint8_t i;
 	
 	// Помещаем в свободный слот
-	for (i=0; i<MAX_THREADS; i++)
+	for (i=0; i<UT_MAX_THREADS; i++)
 	{
 		if (! threads[i].code)
 		{
-			threads[i].state=THREAD_RUNNING;
+			threads[i].state=UT_RUNNING;
 			threads[i].wait=0;
 			threads[i].line=0;
 			threads[i].T=0;
@@ -39,7 +39,7 @@ void utThread(thread_t code, void *arg)
 
 void utStart(void)
 {
-	uint16_t prevT=utTime();
+	ut_time_t prevT=utTime();
 	
 	while (1)
 	{
@@ -47,8 +47,8 @@ void utStart(void)
 		
 		
 		// Получаем время, прошедшее с момента последней итерации
-		uint16_t curT=utTime();
-		uint16_t dT=curT - prevT;
+		ut_time_t curT=utTime();
+		ut_time_t dT=curT - prevT;
 		prevT=curT;
 		
 		
@@ -57,24 +57,24 @@ void utStart(void)
 		
 		
 		// Запускаем все нитки
-		for (i=0; i<MAX_THREADS; i++)
+		for (i=0; i<UT_MAX_THREADS; i++)
 		{
-			currentThread=&threads[i];
+			utCurrentThread=&threads[i];
 			
-			if (currentThread->code)
+			if (utCurrentThread->code)
 			{
 				// Считаем таймер сна, и будим нитку, если таймер кончился
-				if (currentThread->T > dT)
-					currentThread->T-=dT; else
-					currentThread->state=THREAD_RUNNING;
+				if (utCurrentThread->T > dT)
+					utCurrentThread->T-=dT; else
+					utCurrentThread->state=UT_RUNNING;
 				
-				//printf("cp %d state=%d T=%d\n", i, currentThread->state, currentThread->T);
+				//printf("cp %d state=%d T=%d\n", i, utCurrentThread->state, utCurrentThread->T);
 				
 				// Запускаем код, если нитка в нужном состоянии
-				if (currentThread->state == THREAD_RUNNING)
+				if (utCurrentThread->state == UT_RUNNING)
 				{
 					//printf("run thread %d\n", i);
-					if ( (currentThread->state = currentThread->code( &currentThread->line, currentThread->arg )) == THREAD_FINISHED )
+					if ( (utCurrentThread->state = utCurrentThread->code( &utCurrentThread->line, utCurrentThread->arg )) == UT_FINISHED )
 						threads[i].code=0;
 				}
 			}
@@ -86,42 +86,42 @@ void utStart(void)
 		
 		
 		// Обновляем состояния задач и получаем допустимое время сна и ожидания
-		uint16_t t_sleep, t_wait;
-		t_sleep=t_wait=0xffff;
-		for (i=0; i<MAX_THREADS; i++)
+		ut_time_t t_sleep, t_wait;
+		t_sleep=t_wait=(ut_time_t)-1;	// максимальное число для беззнакового типа
+		for (i=0; i<UT_MAX_THREADS; i++)
 		{
 			if (threads[i].code)
 			{
-				currentThread=&threads[i];
+				utCurrentThread=&threads[i];
 				
 				// Будим нитку, если надо
-				if (ut_wake & currentThread->wait)
+				if (ut_wake & utCurrentThread->wait)
 				{
-					currentThread->state=THREAD_RUNNING;
-					currentThread->wait&=~ut_wake;
+					utCurrentThread->state=UT_RUNNING;
+					utCurrentThread->wait&=~ut_wake;
 				}
 				
 				// Обрабатываем состояние нитки
-				switch (currentThread->state)
+				switch (utCurrentThread->state)
 				{
-					case THREAD_RUNNING:
+					case UT_RUNNING:
 						// Работает - спать нельзя
 						t_sleep=t_wait=0;
 						break;
 					
-					case THREAD_SLEEPING:
+					case UT_SLEEPING:
 						// Спит
-						if (currentThread->T < t_sleep)
-							t_sleep=currentThread->T;
+						if (utCurrentThread->T < t_sleep)
+							t_sleep=utCurrentThread->T;
 						break;
 					
-					case THREAD_WAITING:
+					case UT_WAITING:
 						// Ждет
 						if (t_sleep < t_wait)
 							t_wait=t_sleep;
 						t_sleep=0;	// запрещаем сон
-						if (currentThread->T < t_wait)
-							t_wait=currentThread->T;
+						if (utCurrentThread->T < t_wait)
+							t_wait=utCurrentThread->T;
 						break;
 				}
 			}
