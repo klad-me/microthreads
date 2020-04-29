@@ -43,7 +43,7 @@ typedef uint8_t  (*ut_thread_t)(ut_line_t*, void*);
 
 
 // Структура задачи
-struct ut_thread
+typedef struct ut_thread
 {
 	uint8_t		state;	// Состояние - UT_*
 	ut_sem_t	wait;	// Ожидаемые семафоры (задача перейдет в UT_RUNNING по любому из них)
@@ -51,11 +51,11 @@ struct ut_thread
 	ut_time_t	T;		// Оставшееся время сна/ожидания
 	ut_thread_t	code;	// Код задачи
 	void*		arg;	// Аргумент для задачи
-};
+} ut_thread;
 
 
 // Указатель на текущую выполняемую задачу
-extern struct ut_thread *utCurrentThread;
+extern ut_thread *utCurrentThread;
 
 // Биты пробуждения (чтобы одна задача могла разбудить другую, см. UT_WAKE)
 extern ut_sem_t ut_wake;

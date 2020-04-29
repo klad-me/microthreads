@@ -1,8 +1,8 @@
 #include "ut.h"
 
 
-static struct ut_thread threads[UT_MAX_THREADS];
-struct ut_thread *utCurrentThread;
+static ut_thread threads[UT_MAX_THREADS];
+ut_thread *utCurrentThread;
 ut_sem_t ut_wake;
 
 
@@ -37,6 +37,29 @@ void utThread(ut_thread_t code, void *arg)
 }
 
 
+static void utWakeThreads(ut_sem_t mask)
+{
+	uint8_t i;
+	
+	if (mask == 0) return;
+	
+	for (i=0; i<UT_MAX_THREADS; i++)
+	{
+		if (threads[i].code)
+		{
+			ut_thread *thr=&threads[i];
+			
+			// Будим нитку, если надо
+			if (thr->wait & mask)
+			{
+				thr->state=UT_RUNNING;
+				thr->wait&=~mask;
+			}
+		}
+	}
+}
+
+
 void utStart(void)
 {
 	ut_time_t prevT=utTime();
@@ -52,7 +75,11 @@ void utStart(void)
 		prevT=curT;
 		
 		
-		// Сбрасываем маску просыпания от задачи к задаче
+		// Будим задачи по внешним событиям
+		utWakeThreads(utExtWake());
+		
+		
+		// Сбрасываем маску просыпания от задачи к задаче (программные семафоры)
 		ut_wake=0;
 		
 		
@@ -81,47 +108,37 @@ void utStart(void)
 		}
 		
 		
-		// Получаем внешние маски просыпания
-		ut_wake|=utExtWake();
+		// Будим задачи по программным семафорам
+		utWakeThreads(ut_wake);
 		
 		
-		// Обновляем состояния задач и получаем допустимое время сна и ожидания
-		ut_time_t t_sleep, t_wait;
-		t_sleep=t_wait=(ut_time_t)-1;	// максимальное число для беззнакового типа
+		// Получаем допустимое время сна или ожидания
+		ut_time_t t_sleep=(ut_time_t)-1;	// максимальное число для беззнакового типа
+		uint8_t can_sleep=1;
 		for (i=0; i<UT_MAX_THREADS; i++)
 		{
 			if (threads[i].code)
 			{
-				utCurrentThread=&threads[i];
-				
-				// Будим нитку, если надо
-				if (ut_wake & utCurrentThread->wait)
-				{
-					utCurrentThread->state=UT_RUNNING;
-					utCurrentThread->wait&=~ut_wake;
-				}
+				ut_thread *thr=&threads[i];
 				
 				// Обрабатываем состояние нитки
-				switch (utCurrentThread->state)
+				switch (thr->state)
 				{
 					case UT_RUNNING:
 						// Работает - спать нельзя
-						t_sleep=t_wait=0;
+						t_sleep=0;
+						can_sleep=0;
 						break;
 					
 					case UT_SLEEPING:
 						// Спит
-						if (utCurrentThread->T < t_sleep)
-							t_sleep=utCurrentThread->T;
+						if (thr->T < t_sleep) t_sleep=thr->T;
 						break;
 					
 					case UT_WAITING:
-						// Ждет
-						if (t_sleep < t_wait)
-							t_wait=t_sleep;
-						t_sleep=0;	// запрещаем сон
-						if (utCurrentThread->T < t_wait)
-							t_wait=utCurrentThread->T;
+						// Ждет - можно ждать, но не спать
+						if (thr->T < t_sleep) t_sleep=thr->T;
+						can_sleep=0;
 						break;
 				}
 			}
@@ -129,7 +146,11 @@ void utStart(void)
 		
 		
 		// Засыпаем, если надо
-		if (t_sleep > 0) utDoSleep(t_sleep); else
-		if (t_wait > 0) utDoWait(t_wait);
+		if (t_sleep > 0)
+		{
+			if (can_sleep)
+				utDoSleep(t_sleep); else
+				utDoWait(t_sleep);
+		}
 	}
 }

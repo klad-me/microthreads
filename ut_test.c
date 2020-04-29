@@ -129,13 +129,42 @@ UT(my_thread3)
 }
 
 
+UT(my_thread4)
+{
+	UT_BEGIN();
+		while (1)
+		{
+			printf("Alive 4\n");
+			UT_SLEEP(1000, 0);
+		}
+	UT_END();
+}
+
+
+UT(my_thread5)
+{
+	UT_BEGIN();
+		while (1)
+		{
+			printf("Alive 5.1\n");
+			UT_SLEEP(500, 0);
+			printf("Alive 5.2\n");
+			UT_WAIT(500, 0);
+		}
+	UT_END();
+}
+
+
+
 int main()
 {
 	utInit();
 	
-	utThread(my_thread1, &ctx1);
-	utThread(my_thread2, &ctx2);
-	utThread(my_thread3, &ctx3);
+	//utThread(my_thread1, &ctx1);
+	//utThread(my_thread2, &ctx2);
+	//utThread(my_thread3, &ctx3);
+	utThread(my_thread4, 0);
+	utThread(my_thread5, 0);
 	
 	utStart();
 }
