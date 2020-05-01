@@ -50,7 +50,7 @@ static void utWakeThreads(ut_sem_t mask)
 			ut_thread *thr=&threads[i];
 			
 			// Будим нитку, если надо
-			if (thr->wait & mask)
+			if ( (thr->state != UT_RUNNING) && (thr->wait & mask) )
 			{
 				thr->state=UT_RUNNING;
 				thr->wait&=~mask;
@@ -76,7 +76,7 @@ void utStart(void)
 		
 		
 		// Будим задачи по внешним событиям
-		utWakeThreads(utExtWake());
+		utWakeThreads(utWakeFlags());
 		
 		
 		// Сбрасываем маску просыпания от задачи к задаче (программные семафоры)

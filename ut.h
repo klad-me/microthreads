@@ -2,8 +2,9 @@
 #define MICROTHREADS_UT_H
 
 
-#ifdef UT_STDINT_H
-	#include UT_STDINT_H
+// Файл конфигурации
+#ifdef UT_CONFIG_H
+	#include UT_CONFIG_H
 #else
 	#include <stdint.h>
 #endif
@@ -127,27 +128,35 @@ void utStart(void);
  * Получить текущую метку времени.
  * Время должно продолжать идти даже во время сна и ожидания.
  */
-extern ut_time_t utTime(void);
+#ifndef utTime
+	extern ut_time_t utTime(void);
+#endif
 
 /*
- * Получить семафоры внешнего пробуждения.
- * Должна возвращать только те семафоры, которые выставились с момента прошлого запуска utExtWake()
+ * Получить семафоры пробуждения.
+ * Должна возвращать только те семафоры, которые выставились с момента прошлого запуска utWakeFlags()
  */
-extern ut_sem_t utExtWake(void);
+#ifndef utWakeFlags
+	extern ut_sem_t utWakeFlags(void);
+#endif
 
 /**
  * Спать указанное время.
  * Время сна - приблизительное (можно переходить в режим глубокого сна)
  * Функция может вернуться раньше, если имеются внешние семафоры.
  */
-extern void utDoSleep(ut_time_t T);
+#ifndef utDoSleep
+	extern void utDoSleep(ut_time_t T);
+#endif
 
 /**
  * Ожидать указанное время.
  * Время ожидания - точное.
  * Функция может вернуться раньше, если имеются внешние семафоры.
  */
-extern void utDoWait(ut_time_t T);
+#ifndef utDoWait
+	extern void utDoWait(ut_time_t T);
+#endif
 
 
 #endif

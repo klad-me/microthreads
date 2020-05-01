@@ -19,7 +19,7 @@ ut_time_t utTime(void)
 }
 
 
-ut_sem_t utExtWake(void)
+ut_sem_t utWakeFlags(void)
 {
 	return 0;
 }

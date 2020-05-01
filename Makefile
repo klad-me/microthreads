@@ -1,4 +1,4 @@
-CFLAGS=-Wall '-DUT_STDINT_H=<stdint.h>' '-Dut_sem_t=uint32_t' '-Dut_time_t=uint32_t' -I.
+CFLAGS=-Wall '-Dut_sem_t=uint32_t' '-Dut_time_t=uint32_t' -I.
 LDFLAGS=
 CC=gcc
 
