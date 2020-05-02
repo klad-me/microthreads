@@ -67,7 +67,7 @@ extern ut_sem_t ut_wake;
 
 
 // Начало кода задачи/подпрограммы
-#define UT_BEGIN()			static ut_line_t __sub; (void)__sub; switch (*__cont) { case 0:
+#define UT_BEGIN()			static ut_line_t __sub; (void)__sub; (void)arg; switch (*__cont) { case 0:
 
 // Конец кода задачи/подпрограммы
 #define UT_END()			default: ; } return UT_FINISHED;
