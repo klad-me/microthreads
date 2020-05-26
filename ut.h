@@ -16,6 +16,11 @@
 #endif
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 // Состояния задачи
 enum
 {
@@ -156,6 +161,11 @@ void utStart(void);
  */
 #ifndef utDoWait
 	extern void utDoWait(ut_time_t T);
+#endif
+
+
+#ifdef __cplusplus
+}
 #endif
 
 
