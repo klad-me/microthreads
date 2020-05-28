@@ -15,6 +15,11 @@
 	#define UT_MAX_THREADS		8
 #endif
 
+// Максимальное время сна/ожидания (чтобы, например, периодически просыпаться и дергать сторожевой таймер)
+#ifndef UT_MAX_SLEEP_TIME
+	//#define UT_MAX_SLEEP_TIME		10000
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -161,6 +166,14 @@ void utStart(void);
  */
 #ifndef utDoWait
 	extern void utDoWait(ut_time_t T);
+#endif
+
+/**
+ * Сбросить сторожевой таймер (определить, если необходимо).
+ * Вызывается каждый цикл запуска задач.
+ */
+#ifndef utResetWatchdog
+	#define utResetWatchdog()	do{}while(0)
 #endif
 
 

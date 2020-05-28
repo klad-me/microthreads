@@ -148,9 +148,17 @@ void utStart(void)
 		// Засыпаем, если надо
 		if (t_sleep > 0)
 		{
+#ifdef UT_MAX_SLEEP_TIME
+			if (t_sleep > UT_MAX_SLEEP_TIME)
+				t_sleep=UT_MAX_SLEEP_TIME;
+#endif
+			
 			if (can_sleep)
 				utDoSleep(t_sleep); else
 				utDoWait(t_sleep);
 		}
+		
+		// Дергаем сторожевой таймер
+		utResetWatchdog();
 	}
 }
