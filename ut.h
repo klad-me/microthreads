@@ -101,7 +101,7 @@ extern ut_sem_t ut_wake;
 #define UT_WAKE(sem)		do { ut_wake|=(sem); } while(0)
 
 // Проверить - была ли задача разбужена по указанным семафорам (если указано несколько семафоров - вернет TRUE, если сработали сразу все семафоры)
-#define UT_WOKEN_BY(sem)	((utCurrentThread->wait & sem)==0)
+#define UT_WOKEN_BY(sem)	((utCurrentThread->wait & (sem))==0)
 
 // Выйти из задачи
 #define UT_EXIT()			do { return UT_FINISHED; } while(0)
