@@ -112,6 +112,17 @@ extern ut_sem_t ut_wake;
 								} while(0)
 
 
+// Установить таймер в переменной типа ut_time_t
+#define UT_T_SET(var, t)	do { var=utTime()+(t)-1; } while(0)
+
+// Проверить, истек ли таймер
+#define UT_T_EXPIRED(var)	( (((var)-utTime()) & (1ULL<<(sizeof(ut_time_t)*8-1))) != 0 )
+
+// Получить время, оставшееся до истечения таймера (не проверят истечение)
+#define UT_T_READ(var)		((var)-utTime()+1)
+
+
+
 /**
  * Инициализация
  */
