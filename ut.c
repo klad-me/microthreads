@@ -4,6 +4,9 @@
 static ut_thread threads[UT_MAX_THREADS];
 ut_thread *utCurrentThread;
 ut_sem_t ut_wake;
+#ifdef UT_N_TIMERS
+ut_time_t utTimers[UT_N_TIMERS];
+#endif
 
 
 void utInit(void)
@@ -74,6 +77,15 @@ void utStart(void)
 		ut_time_t dT=curT - prevT;
 		prevT=curT;
 		
+		// Обновляем таймеры
+#ifdef UT_N_TIMERS
+		for (i=0; i<UT_N_TIMERS; i++)
+		{
+			if (utTimers[i] > dT)
+				utTimers[i]-=dT; else
+				utTimers[i]=0;
+		}
+#endif
 		
 		// Будим задачи по внешним событиям
 		utWakeThreads(utWakeFlags());

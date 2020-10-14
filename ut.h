@@ -15,6 +15,11 @@
 	#define UT_MAX_THREADS		8
 #endif
 
+// Количество таймеров
+#ifndef UT_N_TIMERS
+	//#define UT_N_TIMERS		8
+#endif
+
 // Максимальное время сна/ожидания (чтобы, например, периодически просыпаться и дергать сторожевой таймер)
 #ifndef UT_MAX_SLEEP_TIME
 	//#define UT_MAX_SLEEP_TIME		10000
@@ -71,6 +76,11 @@ extern ut_thread *utCurrentThread;
 // Биты пробуждения (чтобы одна задача могла разбудить другую, см. UT_WAKE)
 extern ut_sem_t ut_wake;
 
+// Таймеры обратного отсчёта (до нуля)
+#ifdef UT_N_TIMERS
+extern ut_time_t utTimers[UT_N_TIMERS];
+#endif
+
 
 // Объявить задачу
 #define UT(name)			uint8_t name(ut_line_t *__cont, void *arg)
@@ -112,21 +122,11 @@ extern ut_sem_t ut_wake;
 								} while(0)
 
 
-// Установить таймер в переменной типа ut_time_t
-#define UT_T_SET(var, t)	do { var=utTime()+(t)-1; } while(0)
-
-// Проверить, истек ли таймер
-#define UT_T_EXPIRED(var)	( (((var)-utTime()) & (1ULL<<(sizeof(ut_time_t)*8-1))) != 0 )
-
-// Получить время, оставшееся до истечения таймера (не проверят истечение)
-#define UT_T_READ(var)		((var)-utTime()+1)
-
-
-
 /**
  * Инициализация
  */
 void utInit(void);
+
 
 /**
  * Создать новую задачу
@@ -134,6 +134,7 @@ void utInit(void);
  *  arg  - аргумент (контекст)
  */
 void utThread(ut_thread_t code, void *arg);
+
 
 /**
  * Запустить планировщик
