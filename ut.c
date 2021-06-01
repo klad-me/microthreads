@@ -3,6 +3,7 @@
 
 static ut_thread threads[UT_MAX_THREADS];
 ut_thread *utCurrentThread;
+ut_result_t utResult;
 ut_sem_t ut_wake;
 #ifdef UT_N_TIMERS
 ut_time_t utTimers[UT_N_TIMERS];

@@ -39,74 +39,37 @@ void utDoWait(ut_time_t T)
 }
 
 
-struct
+UT(my_sub, int a, int b)
 {
-	int x;
-} ctx1;
-
-
-struct
-{
-	int y;
-} ctx2;
-
-
-struct
-{
-	int z;
-} ctx3;
-
-
-struct sub_ctx
-{
-	int a, b;
-};
-
-
-UT(my_sub)
-{
-	struct sub_ctx *Z=(struct sub_ctx*)arg;
 	UT_BEGIN();
-		while (Z->b)
-		{
-			printf("my_sub%d=%d\n", Z->a, Z->b--);
-			//UT_SLEEP(100, 0);
-			UT_YIELD();
-		}
+		printf("my_sub a=%d b=%d\n", a, b--);
+		UT_SLEEP(200, 0);
 	UT_END();
 }
 
 
-UT(my_thread1)
+UT_THREAD(my_thread1)
 {
-	static struct sub_ctx Z;
-	
 	//printf("cont=%d\n", *__cont);
 	UT_BEGIN();
 		while (1)
 		{
 			printf("Alive1\n");
-			Z.a=1;
-			Z.b=10;
-			UT_SUB(my_sub, &Z);
+			UT_SUB(my_sub, 1, 10);
 			UT_SLEEP(1000, 0x01);
 		}
 	UT_END();
 }
 
 
-UT(my_thread2)
+UT_THREAD(my_thread2)
 {
-	static struct sub_ctx Z;
-	
 	//printf("cont=%d\n", *__cont);
 	UT_BEGIN();
 		while (1)
 		{
 			printf("Alive2\n");
-			Z.a=2;
-			Z.b=5;
-			UT_SUB(my_sub, &Z);
+			UT_SUB(my_sub, 2, 20);
 			UT_SLEEP(300, 0);
 			UT_WAKE(0x01);
 		}
@@ -114,7 +77,7 @@ UT(my_thread2)
 }
 
 
-UT(my_thread3)
+UT_THREAD(my_thread3)
 {
 	//printf("cont=%d\n", *__cont);
 	UT_BEGIN();
@@ -129,7 +92,7 @@ UT(my_thread3)
 }
 
 
-UT(my_thread4)
+UT_THREAD(my_thread4)
 {
 	UT_BEGIN();
 		while (1)
@@ -141,7 +104,7 @@ UT(my_thread4)
 }
 
 
-UT(my_thread5)
+UT_THREAD(my_thread5)
 {
 	UT_BEGIN();
 		while (1)
@@ -160,11 +123,11 @@ int main()
 {
 	utInit();
 	
-	//utThread(my_thread1, &ctx1);
-	//utThread(my_thread2, &ctx2);
-	//utThread(my_thread3, &ctx3);
-	utThread(my_thread4, 0);
-	utThread(my_thread5, 0);
+	utThread(my_thread1, 0);
+	utThread(my_thread2, 0);
+	utThread(my_thread3, 0);
+	//utThread(my_thread4, 0);
+	//utThread(my_thread5, 0);
 	
 	utStart();
 }

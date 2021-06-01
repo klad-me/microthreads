@@ -54,6 +54,14 @@ enum
 // Тип для хранения номер строки файла (для продолжения выполнения).
 typedef uint16_t ut_line_t;
 
+// Тип для хранения значения возврата
+typedef union {
+	int			i;
+	float		f;
+	const char*	s;
+	void*		v;
+} ut_result_t;
+
 // Прототип функции-задачи
 typedef uint8_t  (*ut_thread_t)(ut_line_t*, void*);
 
@@ -73,6 +81,9 @@ typedef struct ut_thread
 // Указатель на текущую выполняемую задачу
 extern ut_thread *utCurrentThread;
 
+// Значение возврата
+extern ut_result_t utResult;
+
 // Биты пробуждения (чтобы одна задача могла разбудить другую, см. UT_WAKE)
 extern ut_sem_t ut_wake;
 
@@ -81,16 +92,21 @@ extern ut_sem_t ut_wake;
 extern ut_time_t utTimers[UT_N_TIMERS];
 #endif
 
+// Временные таймеры (используется тип ut_time_t)
+#define UT_T_SET(tmr, value)	do { (tmr)=utTime() + (value); } while(0)
+#define UT_T_EXPIRED(tmr)		((((ut_time_t)(utTime() - (tmr))) & (1UL << (sizeof(ut_time_t)*8-1))) == 0)
 
-// Объявить задачу
-#define UT(name)			uint8_t name(ut_line_t *__cont, void *arg)
+
+// Объявить задачу и подпрограмму
+#define UT_THREAD(name)		uint8_t name(ut_line_t *__cont, void *arg)
+#define UT(name, ...)		uint8_t name(ut_line_t *__cont, ##__VA_ARGS__)
 
 
 // Начало кода задачи/подпрограммы
-#define UT_BEGIN()			static ut_line_t __sub; (void)__sub; (void)arg; switch (*__cont) { case 0:
+#define UT_BEGIN()			static ut_line_t __sub; (void)__sub; switch (*__cont) { case 0:
 
 // Конец кода задачи/подпрограммы
-#define UT_END()			default: ; } return UT_FINISHED;
+#define UT_END()			default: ; } utResult.i=0; return UT_FINISHED;
 
 // Спать с ожиданием семафора (сон - режим экономии энергии, время сна - довольно приблизительное)
 #define UT_SLEEP(ms, sem)	do { utCurrentThread->T=(ms); utCurrentThread->wait=(sem); \
@@ -114,11 +130,17 @@ extern ut_time_t utTimers[UT_N_TIMERS];
 #define UT_WOKEN_BY(sem)	((utCurrentThread->wait & (sem))==0)
 
 // Выйти из задачи
-#define UT_EXIT()			do { return UT_FINISHED; } while(0)
+#define UT_EXIT()			do { utResult.i=0; return UT_FINISHED; } while(0)
+
+// Выйти из задачи и вернуть значение
+#define UT_RETURN_I(value)	do { utResult.i=(value); return UT_FINISHED; } while(0)
+#define UT_RETURN_F(value)	do { utResult.f=(value); return UT_FINISHED; } while(0)
+#define UT_RETURN_S(value)	do { utResult.s=(value); return UT_FINISHED; } while(0)
+#define UT_RETURN_V(value)	do { utResult.v=(value); return UT_FINISHED; } while(0)
 
 // Запустить подпрограмму
-#define UT_SUB(fn, arg)		do { uint8_t rv; __sub=0; \
-								(*__cont)=__LINE__; case __LINE__: rv=fn(&__sub, arg); if (rv != UT_FINISHED) return rv; \
+#define UT_SUB(fn, ...)		do { uint8_t rv; __sub=0; \
+								(*__cont)=__LINE__; case __LINE__: rv=fn(&__sub, ##__VA_ARGS__); if (rv != UT_FINISHED) return rv; \
 								} while(0)
 
 
