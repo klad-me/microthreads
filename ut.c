@@ -158,6 +158,13 @@ void utStart(void)
 		}
 		
 		
+		// Получаем время, которое затратилось на выполнение кода и уменьшаем время сна на это время
+		curT=utTime();
+		dT=curT - prevT;
+		if (t_sleep > dT)
+			t_sleep-=dT; else
+			t_sleep=0;
+		
 		// Засыпаем, если надо
 		if (t_sleep > 0)
 		{
